@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>نظام إدارة المهام الذكي المطور جداً</title>
+    <link rel="stylesheet" href="../static/styles.css">
+    <style>
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8; 
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        header {
+            background: linear-gradient(135deg, #3a7bd5, #00d2ff); 
+            color: white;
+            padding: 20px; 
+            text-align: center;
+            font-size: 26px; 
+            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            display: flex;
+            justify-content: space-between; 
+            align-items: center;
+        }
+        .header-buttons button {
+            background-color: #ffffff30; 
+            color: white;
+            border: 1px solid white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            margin-left: 10px; /* RTL margin */
+        }
+        .header-buttons button:hover {
+            background-color: #ffffff50;
+        }
+        #apiStatusIndicator {
+            font-size: 12px;
+            padding: 5px 10px;
+            border-radius: 10px;
+            margin-left: 15px; /* RTL margin */
+            background-color: #dc3545; /* Default to error/not connected */
+            color: white;
+        }
+        #apiStatusIndicator.connected {
+            background-color: #28a745; /* Green for connected */
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            gap: 20px; 
+            padding: 20px;
+        }
+        .task-container {
+            flex: 2.5; 
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .ai-container {
+            flex: 1.5; 
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            max-height: 700px; 
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around; 
+            margin-bottom: 20px;
+            gap: 15px;
+        }
+        .stat {
+            flex: 1;
+            background: #e9ecef; 
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 15px;
+            color: #343a40;
+        }
+        #addTaskBtn {
+            background: #28a745; 
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 17px;
+            margin-bottom: 20px;
+            width: 100%;
+            transition: background-color 0.3s ease;
+        }
+        #addTaskBtn:hover {
+            background: #218838;
+        }
+        #taskList {
+            max-height: 450px; 
+            overflow-y: auto;
+            padding-right: 10px; 
+        }
+        .task {
+            background: #fdfdff; 
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            border-left: 5px solid #007bff; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: transform 0.2s ease;
+        }
+        .task:hover {
+            transform: translateY(-2px);
+        }
+        .task.completed {
+            opacity: 0.6;
+            border-left-color: #28a745; 
+            background-color: #f0f0f0;
+        }
+        .task-title {
+            font-weight: 600;
+            font-size: 1.1em;
+            color: #333;
+        }
+        .task-description {
+            font-size: 0.9em;
+            color: #555;
+            margin: 8px 0;
+        }
+        .task-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .task-actions button {
+            padding: 6px 10px;
+            font-size: 13px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+        .task-actions button:hover {
+            opacity: 0.8;
+        }
+        .ai-header {
+            background: linear-gradient(135deg, #3a7bd5, #00d2ff);
+            color: white;
+            padding: 15px;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        #chatBox {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            border-bottom: 1px solid #e0e0e0;
+            background-color: #f9f9f9;
+        }
+        .chat-message {
+            margin-bottom: 12px;
+            padding: 10px 15px;
+            border-radius: 18px; 
+            font-size: 15px;
+            line-height: 1.5;
+            max-width: 80%;
+        }
+        .user-message {
+            background: #007bff;
+            color: white;
+            text-align: left;
+            margin-left: auto; 
+            border-bottom-right-radius: 5px;
+        }
+        .ai-message {
+            background: #e9ecef;
+            color: #343a40;
+            text-align: right;
+            margin-right: auto; 
+            border-bottom-left-radius: 5px;
+        }
+        #userInputContainer {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #e0e0e0;
+            background-color: #fff;
+        }
+        #userInput {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            outline: none;
+            font-size: 15px;
+        }
+        #sendChatBtn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 0 15px;
+            border-radius: 20px;
+            margin-right: 8px; 
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 20px; 
+            background: #6c757d;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+        .filter-btn:hover {
+            background: #5a6268;
+        }
+        .filter-btn.active {
+            background: #007bff;
+            font-weight: bold;
+        }
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.6);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 25px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 500px; 
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            position: relative; 
+        }
+        .modal-content h3, .modal-content h4 {
+            margin-top: 0;
+            color: #333;
+            font-size: 20px;
+        }
+        .modal-content h4 {
+            font-size: 18px;
+            color: #007bff;
+            margin-top: 15px;
+            margin-bottom: 8px;
+        }
+        .modal-content p, .modal-content ul {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #555;
+        }
+        .modal-content ul {
+            padding-right: 20px; 
+            margin-bottom: 15px;
+        }
+        .modal-content li {
+            margin-bottom: 8px;
+        }
+        .modal-content input[type="text"],
+        .modal-content input[type="password"],
+        .modal-content textarea,
+        .modal-content select,
+        .modal-content input[type="date"] {
+            width: calc(100% - 22px); 
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+        .modal-content textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .modal-actions button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        #saveTaskBtn, #saveApiKeyBtn {
+            background-color: #28a745;
+            color: white;
+        }
+        #saveTaskBtn:hover, #saveApiKeyBtn:hover {
+            background-color: #218838;
+        }
+        #cancelTaskBtn, #closeHelpBtn, #cancelApiKeyBtn {
+            background-color: #dc3545;
+            color: white;
+        }
+        #cancelTaskBtn:hover, #closeHelpBtn:hover, #cancelApiKeyBtn:hover {
+            background-color: #c82333;
+        }
+        .ai-suggestion-box {
+            padding: 10px;
+            margin: 10px 0;
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        .ai-suggestion-box p {
+            margin: 0 0 5px 0;
+        }
+        .ai-suggestion-box button {
+            background-color: #2196f3;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+            margin-top: 5px;
+        }
+        .close-modal-btn {
+            position: absolute;
+            top: 15px;
+            left: 15px; 
+            font-size: 24px;
+            font-weight: bold;
+            color: #aaa;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+        .close-modal-btn:hover {
+            color: #777;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            .ai-container {
+                order: -1; 
+                margin-bottom: 20px;
+                max-height: 400px;
+            }
+            .task-container {
+                flex: 1;
+            }
+            header {
+                font-size: 20px;
+                flex-direction: column;
+                gap: 10px;
+            }
+            .header-buttons {
+                display: flex;
+                gap: 10px;
+            }
+            .header-buttons button {
+                font-size: 14px;
+                padding: 6px 10px;
+            }
+            #apiStatusIndicator {
+                 margin-left: 0; /* Reset margin for smaller screens */
+            }
+        }
+    </style>
+    
+</head>
+<body>
+
+<header>
+    <span>نظام إدارة المهام الذكي المطور جداً</span>
+    <div class="header-buttons">
+        <span id="apiStatusIndicator">الذكاء الاصطناعي: متصل</span>
+
+        <button id="helpButton">؟ دليل الاستخدام</button>
+    </div>
+</header>
+
+<div class="main-container">
+    <div class="task-container">
+        <div class="filters">
+            <button class="filter-btn active" data-filter="all">الكل</button>
+            <button class="filter-btn" data-filter="active">نشطة</button>
+            <button class="filter-btn" data-filter="completed">مكتملة</button>
+        </div>
+        
+        <div class="stats">
+            <div class="stat">إجمالي المهام: <span id="totalCount">0</span></div>
+            <div class="stat">مهام مكتملة: <span id="doneCount">0</span></div>
+            <div class="stat">مهام نشطة: <span id="activeCount">0</span></div>
+        </div>
+        
+        <button id="addTaskBtn">+ إضافة مهمة جديدة</button>
+        
+        <div id="pomodoroSection">
+            <h4>مؤقت التركيز (بومودورو)</h4>
+            <div id="pomodoroTimer">25:00</div>
+            <div>
+                <label for="workDuration">وقت العمل (دقائق):</label>
+                <input type="number" id="workDuration" value="25" min="1">
+                <label for="breakDuration">وقت الراحة (دقائق):</label>
+                <input type="number" id="breakDuration" value="5" min="1">
+            </div>
+            <button id="startPomodoro">بدء</button>
+            <button id="pausePomodoro" disabled>إيقاف مؤقت</button>
+            <button id="resetPomodoro">إعادة تعيين</button>
+        </div>
+        
+        <div id="alertBar" class="alert-bar-container"></div>
+        
+        <div id="taskList">
+            <!-- المهام ستعرض هنا -->
+        </div>
+    </div>
+    
+    <div class="ai-container">
+        <div class="ai-header">المساعد الذكي (ردود تلقائية)</div>
+        <div id="chatBox">
+            <div class="ai-message system-message">مرحباً بك! أنا هنا لمساعدتك في إدارة مهامك. يمكنك أن تطلب مني إضافة مهام، عرضها، أو الحصول على توصيات. جرب كتابة "مساعدة" لمعرفة المزيد.</div>
+        </div>
+        <div id="userInputContainer">
+            <input type="text" id="chatInput" placeholder="اكتب أمرك هنا... (مثال: أضف مهمة شراء الخبز)" autocomplete="off">
+            <button id="sendChatButton">أرسل</button>
+        </div>
+         <div id="recommendationsOutput" class="recommendations-container">
+            <h4>توصيات ذكية</h4>
+            <!-- التوصيات ستعرض هنا -->
+        </div>
+    </div>
+</div>
+
+<!-- Task Modal -->
+<div id="taskModal" class="modal">
+    <div class="modal-content">
+        <button class="close-modal-btn" onclick="closeTaskModal()">&times;</button>
+        <h3>إضافة / تعديل مهمة</h3>
+        <button id="toggleStaticRepliesBtn" style="margin-bottom: 10px;">🧠 إظهار الردود الجاهزة</button>
+
+        <input type="text" id="taskTitleInput" placeholder="عنوان المهمة (مثال: اجتماع مع فريق التسويق)">
+        <textarea id="taskDescriptionInput" placeholder="وصف المهمة (اختياري)"></textarea>
+        <select id="taskPriorityInput">
+            <option value="URGENT">عاجل</option>
+            <option value="IMPORTANT">هام</option>
+            <option value="NORMAL" selected>متوسط</option>
+            <option value="LOW">منخفض</option>
+        </select>
+        <input type="date" id="taskDueDateInput">
+        <div class="modal-actions">
+            <button id="saveTaskBtn">حفظ المهمة</button>
+            <button id="cancelTaskBtn">إلغاء</button>
+        </div>
+    </div>
+</div>
+
+<!-- Help Modal -->
+<div id="helpModal" class="modal">
+    <div class="modal-content">
+        <button class="close-modal-btn" onclick="closeHelpModal()">&times;</button>
+        <h3>دليل استخدام نظام إدارة المهام الذكي</h3>
+        
+        
+        <ol>
+            <li>اذهب إلى <a href="https://huggingface.co/join" target="_blank">huggingface.co/join</a> لإنشاء حساب مجاني.</li>
+            <li>بعد تسجيل الدخول، اذهب إلى إعدادات حسابك (Settings) ثم إلى قسم "Access Tokens".</li>
+            <li>أنشئ مفتاحاً جديداً (New token) بالصلاحيات المناسبة (عادةً "read" كافية للـ Inference API).</li>
+            <li>انسخ المفتاح الذي تم إنشاؤه.</li>
+            <li>في هذا الموقع، اضغط على زر "إعدادات مفتاح API" في الشريط العلوي.</li>
+            <li>ألصق المفتاح في الحقل المخصص واضغط "حفظ المفتاح".</li>
+        </ol>
+        <p>بمجرد حفظ المفتاح، سيتم تفعيل الدردشة الذكية المتصلة بنماذج Hugging Face.</p>
+
+        <h4>إدارة المهام:</h4>
+        <ul>
+            <li><strong>إضافة مهمة:</strong> اضغط على زر "+ إضافة مهمة جديدة". املأ العنوان، الوصف (اختياري)، حدد الأولوية وتاريخ الاستحقاق، ثم اضغط "حفظ المهمة".</li>
+            <li><strong>تعديل مهمة:</strong> من قائمة المهام، اضغط على زر "تعديل" بجانب المهمة المطلوبة. قم بالتعديلات ثم اضغط "حفظ المهمة".</li>
+            <li><strong>إكمال مهمة:</strong> اضغط على مربع الاختيار بجانب عنوان المهمة. يمكنك أيضاً إلغاء الإكمال بالضغط مرة أخرى.</li>
+            <li><strong>حذف مهمة:</strong> اضغط على زر "حذف" بجانب المهمة. سيُطلب منك تأكيد الحذف.</li>
+            <li><strong>فلترة المهام:</strong> استخدم الأزرار "الكل"، "نشطة"، "مكتملة" أعلى قائمة المهام لعرض المهام حسب حالتها.</li>
+        </ul>
+
+        <h4>المساعد الذكي (الدردشة):</h4>
+        <p>يمكنك التفاعل مع المساعد الذكي عبر صندوق الدردشة. اكتب رسالتك واضغط "أرسل". إذا كان مفتاح API مفعلاً، سيقوم المساعد بالرد باستخدام نماذج لغوية متقدمة. إذا لم يكن المفتاح مفعلاً، ستكون الردود محدودة ومبرمجة مسبقاً.</p>
+        <ul>
+            <li><strong>مع مفتاح API:</strong> يمكنك طرح أسئلة عامة، طلب تحليل للمهام، الحصول على اقتراحات مفصلة، وأكثر.</li>
+            <li><strong>بدون مفتاح API (وضع محدود):</strong> يمكنك تجربة أوامر بسيطة مثل "أضف مهمة شراء الخبز" أو "عرض مهامي".</li>
+        </ul>
+
+        <h4>ميزات الذكاء الاصطناعي الأخرى:</h4>
+        <ul>
+            <li><strong>الاقتراحات الاستباقية:</strong> أسفل زر "إضافة مهمة جديدة"، قد تظهر اقتراحات ذكية بناءً على حالة مهامك.</li>
+            <li><strong>الترتيب الذكي للمهام:</strong> يتم ترتيب المهام في القائمة تلقائياً بناءً على الأولوية، تاريخ الاستحقاق، وتاريخ الإنشاء.</li>
+        </ul>
+        <p>نأمل أن يساعدك هذا النظام على إدارة مهامك بفعالية وذكاء!</p>
+        <div class="modal-actions" style="margin-top: 20px;">
+            <button id="closeHelpBtn" onclick="closeHelpModal()">إغلاق الدليل</button>
+        </div>
+    </div>
+</div>
+
+<!-- API Key Modal -->
+<div id="apiKeyModal" class="modal">
+    <div class="modal-content">
+        <button class="close-modal-btn" onclick="closeApiKeyModal()">&times;</button>
+      
+        <input type="password" id="hfApiKeyInput" placeholder="أدخل مفتاح Hugging Face API هنا">
+        <p style="font-size:0.9em; color: #666;">يمكنك الحصول على مفتاح مجاني من <a href="https://huggingface.co/settings/tokens" target="_blank">huggingface.co/settings/tokens</a> بعد إنشاء حساب.</p>
+        <div class="modal-actions">
+            <button id="saveApiKeyBtn">حفظ المفتاح</button>
+            <button id="cancelApiKeyBtn" onclick="closeApiKeyModal()">إلغاء</button>
+        </div>
+    </div>
+</div>
+<script src="../static/app.js"></script>
+
+<script>
+    // URLs for backend API
+    const API_BASE_URL = ""; // Assuming Flask serves static files from root
+    const TASKS_API_URL = `${API_BASE_URL}/api/tasks`;
+    const RECOMMENDATIONS_API_URL = `${API_BASE_URL}/api/recommendations`;
+    const CHAT_API_URL = `${API_BASE_URL}/api/chat`;
+    const SET_HF_TOKEN_API_URL = `${API_BASE_URL}/api/set_hf_token`;
+
+    let currentTasks = [];
+    let currentFilter = 'all';
+    let editingTaskId = null;
+    let hfApiToken = localStorage.getItem("hfApiKey_v1") || null; // Load token from local storage
+
+    const taskListDiv = document.getElementById('taskList');
+    const addTaskBtn = document.getElementById('addTaskBtn');
+    const taskModal = document.getElementById('taskModal');
+    const saveTaskBtn = document.getElementById('saveTaskBtn');
+    const cancelTaskBtn = document.getElementById('cancelTaskBtn');
+    const taskTitleInput = document.getElementById('taskTitleInput');
+    const taskDescriptionInput = document.getElementById('taskDescriptionInput');
+    const taskPriorityInput = document.getElementById('taskPriorityInput');
+    const taskDueDateInput = document.getElementById('taskDueDateInput');
+
+    const helpButton = document.getElementById('helpButton');
+    const helpModal = document.getElementById('helpModal');
+    const closeHelpBtn = document.getElementById('closeHelpBtn');
+
+    const apiKeySettingsBtn = document.getElementById('apiKeySettingsBtn');
+    const apiKeyModal = document.getElementById('apiKeyModal');
+    const hfApiKeyInput = document.getElementById('hfApiKeyInput');
+    const saveApiKeyBtn = document.getElementById('saveApiKeyBtn');
+    const apiStatusIndicator = document.getElementById('apiStatusIndicator');
+
+    const chatBox = document.getElementById('chatBox');
+    const userInput = document.getElementById('userInput');
+    const sendChatBtn = document.getElementById('sendChatBtn');
+    const aiProactiveSuggestionsDiv = document.getElementById('aiProactiveSuggestions');
+
+    // --- API Key Management ---
+    function openApiKeyModal() {
+        hfApiKeyInput.value = hfApiToken || "";
+        apiKeyModal.style.display = 'flex';
+    }
+    function closeApiKeyModal() {
+        apiKeyModal.style.display = 'none';
+    }
+
+    async function saveApiKey() {
+        const newApiKey = hfApiKeyInput.value.trim();
+        if (!newApiKey) {
+        
+            return;
+        }
+        try {
+            const response = await fetch(SET_HF_TOKEN_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ hf_token: newApiKey })
+            });
+            const result = await response.json();
+            if (response.ok) {
+                hfApiToken = newApiKey;
+                localStorage.setItem("hfApiKey_v1", newApiKey);
+                updateApiStatusIndicator(true);
+              
+                closeApiKeyModal();
+            } else {
+               
+                updateApiStatusIndicator(false);
+            }
+        } catch (error) {
+            console.error("Error saving API key:", error);
+            
+            updateApiStatusIndicator(false);
+        }
+    }
+
+    function updateApiStatusIndicator(isConnected) {
+        if (isConnected && hfApiToken) {
+            apiStatusIndicator.textContent = "الذكاء الاصطناعي: متصل";
+            apiStatusIndicator.classList.add("connected");
+        } else {
+           
+            apiStatusIndicator.classList.remove("connected");
+        }
+    }
+
+    // --- Task Management Functions ---
+    async function fetchTasks() {
+        try {
+            const response = await fetch(TASKS_API_URL);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            currentTasks = await response.json();
+            renderTasks();
+            updateStats();
+            fetchRecommendations(); // Fetch recommendations after tasks are loaded
+        } catch (error) {
+            console.error("Error fetching tasks:", error);
+        }
+    }
+
+    function renderTasks() {
+        taskListDiv.innerHTML = '';
+        const filteredTasks = currentTasks.filter(task => {
+            if (currentFilter === 'all') return true;
+            if (currentFilter === 'active') return !task.is_completed;
+            if (currentFilter === 'completed') return task.is_completed;
+            return true;
+        });
+
+        if (filteredTasks.length === 0) {
+            taskListDiv.innerHTML = '<p style="text-align:center; color:#777;">لا توجد مهام تطابق هذا الفلتر حالياً.</p>';
+            return;
+        }
+
+        filteredTasks.forEach(task => {
+            const taskDiv = document.createElement('div');
+            taskDiv.className = `task ${task.is_completed ? 'completed' : ''}`;
+            taskDiv.dataset.id = task.id;
+            
+            let priorityText = task.priority;
+            if(task.priority === "URGENT") priorityText = "عاجل";
+            else if(task.priority === "IMPORTANT") priorityText = "هام";
+            else if(task.priority === "NORMAL") priorityText = "متوسط";
+            else if(task.priority === "LOW") priorityText = "منخفض";
+
+            taskDiv.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <strong class="task-title">${task.title}</strong>
+                    <input type="checkbox" class="complete-checkbox" ${task.is_completed ? 'checked' : ''} data-id="${task.id}">
+                </div>
+                ${task.description ? `<p class="task-description">${task.description}</p>` : ''}
+                <small style="color:#555;">
+                    الأولوية: ${priorityText} 
+                    ${task.due_date ? `| تاريخ الاستحقاق: ${new Date(task.due_date).toLocaleDateString('ar-EG')}` : ''}
+                </small>
+                <div class="task-actions">
+                    <button class="edit-btn" data-id="${task.id}">تعديل</button>
+                    <button class="delete-btn" data-id="${task.id}">حذف</button>
+                </div>
+            `;
+            taskListDiv.appendChild(taskDiv);
+        });
+    }
+
+    function openTaskModal(task = null) {
+        editingTaskId = task ? task.id : null;
+        taskTitleInput.value = task ? task.title : '';
+        taskDescriptionInput.value = task ? task.description : '';
+        taskPriorityInput.value = task ? task.priority : 'NORMAL';
+        taskDueDateInput.value = task ? (task.due_date ? task.due_date.split('T')[0] : '') : '';
+        taskModal.style.display = 'flex';
+    }
+
+    function closeTaskModal() {
+        taskModal.style.display = 'none';
+        editingTaskId = null;
+    }
+
+    async function saveTask() {
+        const title = taskTitleInput.value.trim();
+        const description = taskDescriptionInput.value.trim();
+        const priority = taskPriorityInput.value;
+        const dueDate = taskDueDateInput.value;
+
+        if (!title) {
+            alert('عنوان المهمة مطلوب!');
+            return;
+        }
+
+        const taskData = { title, description, priority, due_date: dueDate || null };
+        let url = TASKS_API_URL;
+        let method = 'POST';
+
+        // This part is for editing, but the current backend doesn't support PUT for editing tasks directly, only for completion.
+        // For a full edit, you'd typically use PUT /api/tasks/{task_id}
+        // We'll simplify by just re-adding if editing (or user can delete and re-add)
+        // For now, we'll just always POST as new if editingTaskId is set, which is not ideal.
+        // A proper PUT endpoint would be needed for true editing.
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(taskData)
+            });
+            if (!response.ok) {
+                 const errorData = await response.json();
+                 throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.error}`);
+            }
+            await fetchTasks(); // Refresh task list
+            closeTaskModal();
+        } catch (error) {
+            console.error("Error saving task:", error);
+            alert("خطأ في حفظ المهمة: " + error.message);
+        }
+    }
+
+    async function toggleTaskComplete(taskId) {
+        try {
+            const response = await fetch(`${TASKS_API_URL}/${taskId}/complete`, { method: 'PUT' });
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            await fetchTasks();
+        } catch (error) {
+            console.error("Error toggling task completion:", error);
+        }
+    }
+
+    async function deleteTask(taskId) {
+        if (!confirm('هل أنت متأكد أنك تريد حذف هذه المهمة؟')) return;
+        try {
+            const response = await fetch(`${TASKS_API_URL}/${taskId}`, { method: 'DELETE' });
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            await fetchTasks();
+        } catch (error) {
+            console.error("Error deleting task:", error);
+        }
+    }
+
+    function updateStats() {
+        document.getElementById('totalCount').textContent = currentTasks.length;
+        document.getElementById('doneCount').textContent = currentTasks.filter(t => t.is_completed).length;
+        document.getElementById('activeCount').textContent = currentTasks.filter(t => !t.is_completed).length;
+    }
+
+    // --- Chat Functions ---
+    function addMessageToChatBox(message, sender) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `chat-message ${sender}`;
+        messageDiv.textContent = message;
+        chatBox.appendChild(messageDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    async function sendChatMessage() {
+        const messageText = userInput.value.trim();
+        if (!messageText) return;
+
+        addMessageToChatBox(messageText, 'user-message');
+        userInput.value = '';
+
+        try {
+            const response = await fetch(CHAT_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ command: messageText })
+            });
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.response || `HTTP error! status: ${response.status}`);
+            }
+            const result = await response.json();
+            addMessageToChatBox(result.response, 'ai-message');
+            
+            // If the chat command might have affected tasks (e.g., add, complete), refresh tasks
+            if (result.response.includes("تمت إضافة المهمة") || result.response.includes("اكتملت")) {
+                fetchTasks();
+            }
+        } catch (error) {
+            console.error("Error sending chat message:", error);
+            addMessageToChatBox("عذراً، حدث خطأ أثناء معالجة طلبك: " + error.message, 'ai-message');
+        }
+    }
+    
+    // --- Recommendation Functions ---
+    async function fetchRecommendations() {
+        try {
+            const response = await fetch(RECOMMENDATIONS_API_URL);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const recommendations = await response.json();
+            renderRecommendations(recommendations);
+        } catch (error) {
+            console.error("Error fetching recommendations:", error);
+        }
+    }
+
+    function renderRecommendations(recommendations) {
+        aiProactiveSuggestionsDiv.innerHTML = '';
+        if (recommendations && recommendations.length > 0) {
+            const suggestionBox = document.createElement('div');
+            suggestionBox.className = 'ai-suggestion-box';
+            let html = '<p><strong>💡 اقتراحات ذكية:</strong></p><ul>';
+            recommendations.forEach(rec => {
+                html += `<li>${rec}</li>`;
+            });
+            html += '</ul>';
+            suggestionBox.innerHTML = html;
+            aiProactiveSuggestionsDiv.appendChild(suggestionBox);
+        }
+    }
+
+    // --- Help Modal Functions ---
+    function openHelpModal() {
+        helpModal.style.display = 'flex';
+    }
+    function closeHelpModal() {
+        helpModal.style.display = 'none';
+    }
+
+    // --- Event Listeners ---
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchTasks();
+        updateApiStatusIndicator(hfApiToken ? true : false);
+        if (!hfApiToken) {
+        }
+    });
+
+    addTaskBtn.addEventListener('click', () => openTaskModal());
+    saveTaskBtn.addEventListener('click', saveTask);
+    cancelTaskBtn.addEventListener('click', closeTaskModal);
+
+    helpButton.addEventListener('click', openHelpModal);
+    closeHelpBtn.addEventListener('click', closeHelpModal);
+    
+    apiKeySettingsBtn.addEventListener('click', openApiKeyModal);
+    saveApiKeyBtn.addEventListener('click', saveApiKey);
+    document.getElementById('cancelApiKeyBtn').addEventListener('click', closeApiKeyModal);
+
+    sendChatBtn.addEventListener('click', sendChatMessage);
+    userInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendChatMessage();
+    });
+
+    document.querySelectorAll('.filter-btn').forEach(button => {
+        button.addEventListener('click', (e) => {
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            e.target.classList.add('active');
+            currentFilter = e.target.dataset.filter;
+            renderTasks();
+        });
+    });
+
+    taskListDiv.addEventListener('click', (e) => {
+        if (e.target.classList.contains('complete-checkbox')) {
+            toggleTaskComplete(e.target.dataset.id);
+        }
+        if (e.target.classList.contains('delete-btn')) {
+            deleteTask(e.target.dataset.id);
+        }
+        // Edit button functionality would require a proper PUT endpoint or more complex client-side logic
+        // For now, we'll skip direct edit from list to keep it simple with current backend.
+        // if (e.target.classList.contains('edit-btn')) {
+        //     const taskToEdit = currentTasks.find(t => t.id == e.target.dataset.id);
+        //     if(taskToEdit) openTaskModal(taskToEdit);
+        // }
+    });
+
+    // Close modals if clicked outside content
+    window.onclick = function(event) {
+        if (event.target == taskModal) closeTaskModal();
+        if (event.target == helpModal) closeHelpModal();
+        if (event.target == apiKeyModal) closeApiKeyModal();
+    }
+document.addEventListener("DOMContentLoaded", () => {
+    const aiProactiveSuggestionsDiv = document.getElementById("aiProactiveSuggestions");
+
+    const staticSuggestions = [
+        {
+            "text": "هل ترغب في جدولة مهمة جديدة؟",
+            "response": "نعم، يمكنني مساعدتك في إضافة مهمة جديدة. فقط اضغط على زر (إضافة مهمة جديدة)."
+        },
+        {
+            "text": "كيف أتابع المهام المكتملة؟",
+            "response": "يمكنك فلترة المهام من الأعلى واختيار 'مكتملة' لرؤية المهام التي أنهيتها."
+        },
+        {
+            "text": "ماهي أولوياتي لهذا اليوم؟",
+            "response": "أولوياتك تُعرض بترتيب الأهمية والتاريخ تلقائياً في قائمة المهام."
+        }
+    ];
+
+    const timeOptions = ["اليوم", "غداً", "الأسبوع المقبل"];
+
+    if (staticSuggestions.length > 0) {
+        const suggestionBox = document.createElement("div");
+        suggestionBox.className = "ai-suggestion-box";
+        let html = "<p><strong>🧠 ردود جاهزة:</strong></p><ul>";
+
+        staticSuggestions.forEach((item, index) => {
+            html += `<li><button class="static-reply" data-reply="${index}">${item.text}</button></li>`;
+        });
+
+        html += "</ul><p style='margin-top:10px;'><strong>🕓 اختيارات الوقت:</strong></p><div style='display:flex; gap:10px; flex-wrap:wrap;'>";
+
+        timeOptions.forEach(time => {
+            html += `<button class="static-time-option">${time}</button>`;
+        });
+
+        html += "</div>";
+        suggestionBox.innerHTML = html;
+        aiProactiveSuggestionsDiv.appendChild(suggestionBox);
+
+        document.querySelectorAll(".static-reply").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                const idx = parseInt(e.target.dataset.reply);
+                const message = staticSuggestions[idx].response;
+                addMessageToChatBox(e.target.textContent, "user-message");
+                addMessageToChatBox(message, "ai-message");
+            });
+        });
+
+        document.querySelectorAll(".static-time-option").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                const selectedTime = e.target.textContent;
+                addMessageToChatBox(`أريد تحديد مهمة لـ: ${selectedTime}`, "user-message");
+                addMessageToChatBox(`تم تحديد المهام حسب الوقت: ${selectedTime}.`, "ai-message");
+            });
+        });
+    }
+});
+document.addEventListener("DOMContentLoaded", () => {
+    const aiProactiveSuggestionsDiv = document.getElementById("aiProactiveSuggestions");
+
+    const staticSuggestions = [
+        {
+            "text": "هل ترغب في جدولة مهمة جديدة؟",
+            "response": "نعم، يمكنني مساعدتك في إضافة مهمة جديدة. فقط اضغط على زر (إضافة مهمة جديدة)."
+        },
+        {
+            "text": "كيف أتابع المهام المكتملة؟",
+            "response": "يمكنك فلترة المهام من الأعلى واختيار 'مكتملة' لرؤية المهام التي أنهيتها."
+        },
+        {
+            "text": "ماهي أولوياتي لهذا اليوم؟",
+            "response": "أولوياتك تُعرض بترتيب الأهمية والتاريخ تلقائياً في قائمة المهام."
+        }
+    ];
+
+    const timeOptions = ["اليوم", "غداً", "الأسبوع المقبل"];
+
+    const toggleBtn = document.getElementById("toggleStaticRepliesBtn");
+
+    toggleBtn.addEventListener("click", () => {
+        if (aiProactiveSuggestionsDiv.innerHTML.trim() !== "") {
+            aiProactiveSuggestionsDiv.innerHTML = "";
+            toggleBtn.textContent = "🧠 إظهار الردود الجاهزة";
+        } else {
+            renderStaticSuggestions();
+            toggleBtn.textContent = "❌ إخفاء الردود الجاهزة";
+        }
+    });
+
+    function renderStaticSuggestions() {
+        const suggestionBox = document.createElement("div");
+        suggestionBox.className = "ai-suggestion-box";
+        let html = "<p><strong>🧠 ردود جاهزة:</strong></p><ul>";
+
+        staticSuggestions.forEach((item, index) => {
+            html += `<li><button class="static-reply" data-reply="${index}">${item.text}</button></li>`;
+        });
+
+        html += "</ul><p style='margin-top:10px;'><strong>🕓 اختيارات الوقت:</strong></p><div style='display:flex; gap:10px; flex-wrap:wrap;'>";
+
+        timeOptions.forEach(time => {
+            html += `<button class="static-time-option">${time}</button>`;
+        });
+
+        html += "</div>";
+        suggestionBox.innerHTML = html;
+        aiProactiveSuggestionsDiv.appendChild(suggestionBox);
+
+        document.querySelectorAll(".static-reply").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                const idx = parseInt(e.target.dataset.reply);
+                const message = staticSuggestions[idx].response;
+                addMessageToChatBox(e.target.textContent, "user-message");
+                addMessageToChatBox(message, "ai-message");
+            });
+        });
+
+        document.querySelectorAll(".static-time-option").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                const selectedTime = e.target.textContent;
+                addMessageToChatBox(`أريد تحديد مهمة لـ: ${selectedTime}`, "user-message");
+                addMessageToChatBox(`تم تحديد المهام حسب الوقت: ${selectedTime}.`, "ai-message");
+            });
+        });
+    }
+});
+
+</script>
+</body>
+</html>
+
